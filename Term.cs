@@ -4,12 +4,13 @@ using System.Text;
 
 class Term
 {
-    public Loc loc;
+    public readonly Loc loc;
     public readonly Tag tag;
-    public List<Term> contents;
+    public readonly List<Term> contents = new List<Term>();
 
-    public Term(Tag tag)
+    public Term(Loc loc, Tag tag)
     {
+        this.loc = loc;
         this.tag = tag;
     }
 }
