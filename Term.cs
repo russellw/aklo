@@ -6,9 +6,13 @@ class Term
 {
     public readonly Loc loc;
     public readonly Tag tag;
-    public readonly string s;
-    public object atom;
+    public readonly string name;
     public readonly List<Term> contents = new List<Term>();
+    public int intVal;
+    public float floatVal;
+    public double doubleVal;
+    public Term type;
+    public List<Term> params1;
 
     public Term(Loc loc, Tag tag, params Term[] s)
     {
@@ -18,32 +22,32 @@ class Term
             contents.Add(a);
     }
 
-    public Term(Loc loc, Tag tag, string s)
+    public Term(Loc loc, Tag tag, string name)
     {
         this.loc = loc;
         this.tag = tag;
-        this.s = s;
+        this.name = name;
     }
 
-    public Term(Loc loc, int n)
+    public Term(Loc loc, int intVal)
     {
         this.loc = loc;
         this.tag = Tag.Int;
-        this.atom = n;
+        this.intVal = intVal;
     }
 
-    public Term(Loc loc, float x)
+    public Term(Loc loc, float floatVal)
     {
         this.loc = loc;
         this.tag = Tag.Float;
-        this.atom = x;
+        this.floatVal = floatVal;
     }
 
-    public Term(Loc loc, double x)
+    public Term(Loc loc, double doubleVal)
     {
         this.loc = loc;
         this.tag = Tag.Double;
-        this.atom = x;
+        this.doubleVal = doubleVal;
     }
 
     public void add(Term a)

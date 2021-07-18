@@ -1,5 +1,4 @@
-﻿#pragma warning disable IDE0057 // Use range operator
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -421,7 +420,52 @@ static class Parser
             return s;
         }
 
+        //types
+        Term type()
+        {
+            var loc = new Loc(file, line);
+            var s = tok;
+            lex();
+            switch (s)
+            {
+                case "int":
+                    return new Term(loc, Tag.Int);
+            }
+            err(loc.line, string.Format("{0}: expected type", qtok(s)));
+            return null;
+        }
+
+        Term param()
+        {
+            var loc = new Loc(file, line);
+            var a = new Term(loc, Tag.Var, id());
+            eat(":");
+            a.type = type();
+            return a;
+        }
+
+        List<Term> params1()
+        {
+            expect("(");
+            var r = new List<Term>();
+            if (tok != ")")
+                do
+                    r.Add(param());
+                while (eat(","));
+            expect(")");
+            return r;
+        }
+
         //expressions
+        void args(Term a, string rbracket)
+        {
+            if (tok != rbracket)
+                do
+                    a.add(expr());
+                while (eat(","));
+            expect(rbracket);
+        }
+
         Term primary()
         {
             var loc = new Loc(file, line);
@@ -440,6 +484,13 @@ static class Parser
                         lex();
                         var a = expr();
                         expect(")");
+                        return a;
+                    }
+                case "[":
+                    {
+                        lex();
+                        var a = new Term(loc, Tag.List);
+                        args(a, "]");
                         return a;
                     }
             }
@@ -523,6 +574,16 @@ static class Parser
                     case "--":
                         lex();
                         return new Term(loc, Tag.PostDec, a);
+                    case "[":
+                        lex();
+                        a = new Term(loc, Tag.Subscript, a, expr());
+                        expect("]");
+                        break;
+                    case "(":
+                        lex();
+                        a = new Term(loc, Tag.Call, a);
+                        args(a, ")");
+                        break;
                 }
             }
         }
@@ -801,6 +862,17 @@ static class Parser
             Term a;
             switch (tok)
             {
+                case "fn":
+                    lex();
+                    a = new Term(loc, Tag.Def, id());
+                    a.params1 = params1();
+                    eat(":");
+                    if (tok != "\n")
+                        a.type = type();
+                    expect("\n");
+                    a.add(stmts());
+                    expect("end");
+                    break;
                 case "break":
                     lex();
                     a = new Term(loc, Tag.Break);
@@ -812,6 +884,10 @@ static class Parser
                 case "assert":
                     lex();
                     a = new Term(loc, Tag.Assert, expr());
+                    break;
+                case "debug":
+                    lex();
+                    a = new Term(loc, Tag.Debug, expr());
                     break;
                 case "goto":
                     lex();
@@ -835,6 +911,15 @@ static class Parser
                 case "dowhile":
                     lex();
                     a = new Term(loc, Tag.DoWhile, expr());
+                    expect("\n");
+                    a.add(stmts());
+                    expect("end");
+                    break;
+                case "for":
+                    lex();
+                    a = new Term(loc, Tag.For, expr());
+                    expect(",");
+                    a.add(expr());
                     expect("\n");
                     a.add(stmts());
                     expect("end");
