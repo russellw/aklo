@@ -51,7 +51,7 @@ enum Tag
     If,
     Var,
     Len,
-    VList,
+    List,
     New,
     NewArr,
     Break,
@@ -68,7 +68,6 @@ enum Tag
     Or,
     Dot,
     For,
-    ForEach,
     Switch,
     Def,
     At,
@@ -78,4 +77,5 @@ enum Tag
     Float,
     Double,
     Char,
+    Id,
 }

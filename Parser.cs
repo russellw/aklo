@@ -7,6 +7,28 @@ static class Parser
 {
     const string eof = " ";
 
+    static char at(string s, int i)
+    {
+        if (i < s.Length)
+            return s[i];
+        return '\0';
+    }
+
+    static bool parseInt(string s, int base1, out int r)
+    {
+        r = 0;
+        if (s.Length == 0)
+            return false;
+        foreach (var c in s)
+        {
+            var d = digit(c);
+            if (d >= base1)
+                return false;
+            r = r * base1 + d;
+        }
+        return true;
+    }
+
     static bool isDigit(char c)
     {
         return '0' <= c && c <= '9';
@@ -48,21 +70,141 @@ static class Parser
         return 99;
     }
 
-    static string qtok(string t)
+    static bool isId(string s)
     {
-        switch (t)
+        if (!isWordStart(s[0]))
+            return false;
+        switch (s)
+        {
+            case "true":
+            case "false":
+                return false;
+        }
+        return true;
+    }
+
+    static string utf8(int c)
+    {
+        var sb = new StringBuilder();
+        if (c < 0x80)
+        {
+            sb.Append((char)c);
+            return sb.ToString();
+        }
+        if (c < 0x800)
+        {
+            sb.Append((char)(0xa0 | c >> 6));
+            sb.Append((char)(0x80 | (c & 0x3f)));
+            return sb.ToString();
+        }
+        if (c < 0x10000)
+        {
+            sb.Append((char)(0xe0 | c >> 12));
+            sb.Append((char)(0x80 | (c >> 6 & 0x3f)));
+            sb.Append((char)(0x80 | (c & 0x3f)));
+            return sb.ToString();
+        }
+        sb.Append((char)(0xf0 | c >> 18));
+        sb.Append((char)(0x80 | (c >> 12 & 0x3f)));
+        sb.Append((char)(0x80 | (c >> 6 & 0x3f)));
+        sb.Append((char)(0x80 | (c & 0x3f)));
+        return sb.ToString();
+    }
+
+    static string unquote(string s)
+    {
+        var i = 1;
+        var sb = new StringBuilder();
+        while (i < s.Length - 1)
+        {
+            var c = s[i++];
+            switch (c)
+            {
+                case 'a':
+                    sb.Append('\a');
+                    break;
+                case 'b':
+                    sb.Append('\b');
+                    break;
+                case 'f':
+                    sb.Append('\f');
+                    break;
+                case 'n':
+                    sb.Append('\n');
+                    break;
+                case 'r':
+                    sb.Append('\r');
+                    break;
+                case 't':
+                    sb.Append('\t');
+                    break;
+                case 'v':
+                    sb.Append('\v');
+                    break;
+                case 'e':
+                    sb.Append('\x1b');
+                    break;
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                    {
+                        i--;
+                        var j = i + 3;
+                        var n = 0;
+                        while (digit(s[i]) < 8 && i < j)
+                            n = n * 8 + digit(s[i++]);
+                        sb.Append((char)n);
+                        break;
+                    }
+                case 'x':
+                    {
+                        var j = i + 2;
+                        var n = 0;
+                        while (digit(s[i]) < 16 && i < j)
+                            n = n * 16 + digit(s[i++]);
+                        sb.Append((char)n);
+                        break;
+                    }
+                case 'u':
+                case 'U':
+                    {
+                        var j = i + 4;
+                        if (c == 'U')
+                            j += 4;
+                        var n = 0;
+                        while (digit(s[i]) < 16 && i < j)
+                            n = n * 16 + digit(s[i++]);
+                        sb.Append(utf8(n));
+                        break;
+                    }
+                default:
+                    sb.Append(c);
+                    break;
+            }
+        }
+        return sb.ToString();
+    }
+
+    static string qtok(string s)
+    {
+        switch (s)
         {
             case eof:
                 return "EOF";
             case "\n":
                 return "newline";
         }
-        return '\'' + t + '\'';
+        return '\'' + s + '\'';
     }
 
     public static void parse(string file, string text)
     {
-        if (!text.EndsWith('\n'))
+        if (!text.EndsWith("\n"))
             text += '\n';
 
         int ti = 0;
@@ -191,7 +333,7 @@ static class Parser
                 tok = substr(text, i, ti);
                 return;
             }
-            if (isDigit(c))
+            if (isDigit(c) || (c == '.' && isDigit(text[ti + 1])))
             {
                 while (isWordPart(c))
                     ti++;
@@ -254,9 +396,9 @@ static class Parser
         }
 
         //parser
-        bool eat(string t)
+        bool eat(string s)
         {
-            if (tok == t)
+            if (tok == s)
             {
                 lex();
                 return true;
@@ -264,30 +406,119 @@ static class Parser
             return false;
         }
 
-        void expect(string t)
+        void expect(string s)
         {
-            if (!eat(t))
-                err(line, string.Format("{0}: expected {1}", qtok(tok), qtok(t)));
+            if (!eat(s))
+                err(line, string.Format("{0}: expected {1}", qtok(tok), qtok(s)));
         }
 
         //expressions
         Term primary()
         {
-            var lin = line;
-            var loc = new Loc(file, lin);
-            var t = tok;
+            var loc = new Loc(file, line);
+            var s = tok;
             lex();
 
             //specific token
-            switch (t)
+            switch (s)
             {
                 case "false":
                     return new Term(loc, Tag.False);
             }
 
+            //identifier
+            if (isId(s))
+                return new Term(loc, Tag.Id, s);
+
+            //character
+            if (s[0] == '\'')
+            {
+                s = unquote(s);
+                if (s.Length != 1)
+                    err(loc.line, "expected one character");
+                return new Term(loc, s[0]);
+            }
+
+            //string
+            if (s[0] == '\'')
+            {
+                s = unquote(s);
+                var a = new Term(loc, Tag.List);
+                foreach (var c in s)
+                    a.contents.Add(new Term(loc, c));
+                return a;
+            }
+
+            //number
+            if (isDigit(at(s, 0)) || at(s, 0) == '.' && isDigit(at(s, 1)))
+            {
+                var t = s.Replace("_", "");
+                int n;
+                switch (substr(t, 0, 2))
+                {
+                    case "0x":
+                    case "0X":
+                        if (parseInt(substr(t, 2, t.Length), 16, out n))
+                            return new Term(loc, n);
+                        break;
+                    case "0b":
+                    case "0B":
+                        if (parseInt(substr(t, 2, t.Length), 2, out n))
+                            return new Term(loc, n);
+                        break;
+                    case "0o":
+                    case "0O":
+                        if (parseInt(substr(t, 2, t.Length), 8, out n))
+                            return new Term(loc, n);
+                        break;
+                }
+                if (parseInt(t, 10, out n))
+                    return new Term(loc, n);
+                if (t.EndsWith("f") || t.EndsWith("F"))
+                {
+                    t = substr(t, 0, t.Length - 1);
+                    if (float.TryParse(t, out var r))
+                        return new Term(loc, r);
+                    err(loc.line, string.Format("{0}: expected float", qtok(s)));
+                }
+                if (double.TryParse(t, out var r1))
+                    return new Term(loc, r1);
+                err(loc.line, string.Format("{0}: expected number", qtok(s)));
+            }
+
             //none of the above
-            err(lin, "expected expression");
+            err(loc.line, string.Format("{0}: expected expression", qtok(s)));
             return null;
+        }
+
+        Term postfix()
+        {
+            var a = primary();
+            for (; ; )
+            {
+                var loc = new Loc(file, line);
+                switch (tok)
+                {
+                    case "++":
+                        lex();
+                        return new Term(loc, Tag.PostInc, a);
+                    case "--":
+                        lex();
+                        return new Term(loc, Tag.PostDec, a);
+                }
+            }
+        }
+
+        Term prefix()
+        {
+            var loc = new Loc(file, line);
+            switch (tok)
+            {
+                case "++":
+                    lex();
+                    return new Term(loc, Tag.Inc, prefix());
+            }
+            return postfix();
         }
 
         lex();
