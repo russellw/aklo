@@ -45,4 +45,9 @@ class Term
         this.tag = Tag.Double;
         this.atom = x;
     }
+
+    public void add(Term a)
+    {
+        contents.Add(a);
+    }
 }

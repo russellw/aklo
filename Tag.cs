@@ -4,8 +4,6 @@ using System.Text;
 
 enum Tag
 {
-    False,
-    True,
     Add,
     PostInc,
     PostDec,

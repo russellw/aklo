@@ -202,7 +202,7 @@ static class Parser
         return '\'' + s + '\'';
     }
 
-    public static void parse(string file, string text)
+    public static List<Term> parse(string file, string text)
     {
         if (!text.EndsWith("\n"))
             text += '\n';
@@ -412,6 +412,15 @@ static class Parser
                 err(line, string.Format("{0}: expected {1}", qtok(tok), qtok(s)));
         }
 
+        string id()
+        {
+            var s = tok;
+            if (!isId(s))
+                err(line, string.Format("{0}: expected identifier", qtok(s)));
+            lex();
+            return s;
+        }
+
         //expressions
         Term primary()
         {
@@ -423,7 +432,16 @@ static class Parser
             switch (s)
             {
                 case "false":
-                    return new Term(loc, Tag.False);
+                    return new Term(loc, 0);
+                case "true":
+                    return new Term(loc, 1);
+                case "(":
+                    {
+                        lex();
+                        var a = expr();
+                        expect(")");
+                        return a;
+                    }
             }
 
             //identifier
@@ -517,10 +535,363 @@ static class Parser
                 case "++":
                     lex();
                     return new Term(loc, Tag.Inc, prefix());
+                case "--":
+                    lex();
+                    return new Term(loc, Tag.Dec, prefix());
+                case "!":
+                    lex();
+                    return new Term(loc, Tag.Not, prefix());
+                case "-":
+                    lex();
+                    return new Term(loc, Tag.Neg, prefix());
+                case "~":
+                    lex();
+                    return new Term(loc, Tag.BitNot, prefix());
             }
             return postfix();
         }
 
+        // operator precedence parser
+        int prec0 = 99;
+        Dictionary<string, Op> ops = new Dictionary<string, Op>();
+
+        void op(string name, int left = 1)
+        {
+            ops.Add(name, new Op(prec0, left));
+        }
+
+        // multiplicative
+        prec0--;
+        op("*");
+        op("/");
+        op("%");
+
+        // additive
+        prec0--;
+        op("+");
+        op("-");
+        op("@");
+
+        // shift
+        prec0--;
+        op("<<");
+        op(">>");
+
+        // relational
+        prec0--;
+        op("<");
+        op(">");
+        op("<=");
+        op(">=");
+
+        // equality
+        prec0--;
+        op("!=");
+        op("==");
+
+        // bitwise and
+        prec0--;
+        op("&");
+
+        // bitwise xor
+        prec0--;
+        op("^");
+
+        // bitwise or
+        prec0--;
+        op("|");
+
+        // and
+        prec0--;
+        op("&&");
+
+        // or
+        prec0--;
+        op("||");
+
+        // conditional
+        prec0--;
+        op("?", 0);
+
+        // assignment
+        prec0--;
+        op("=", 0);
+        op("*=", 0);
+        op("/=", 0);
+        op("%=", 0);
+        op("+=", 0);
+        op("-=", 0);
+        op("<<=", 0);
+        op(">>=", 0);
+        op("&=", 0);
+        op("^=", 0);
+        op("|=", 0);
+        op(":=", 0);
+
+        Term infix(int prec)
+        {
+            var a = prefix();
+            for (; ; )
+            {
+                var s = tok;
+                if (!ops.TryGetValue(s, out var o))
+                    return a;
+                if (o.prec < prec)
+                    return a;
+                var loc = new Loc(file, line);
+                lex();
+                var b = infix(o.prec + o.left);
+                switch (s)
+                {
+                    // multiplicative
+                    case "*":
+                        a = new Term(loc, Tag.Mul, a, b);
+                        break;
+                    case "/":
+                        a = new Term(loc, Tag.Div, a, b);
+                        break;
+                    case "%":
+                        a = new Term(loc, Tag.Rem, a, b);
+                        break;
+
+                    // additive
+                    case "+":
+                        a = new Term(loc, Tag.Add, a, b);
+                        break;
+                    case "-":
+                        a = new Term(loc, Tag.Sub, a, b);
+                        break;
+
+                    // shift
+                    case "<<":
+                        a = new Term(loc, Tag.Shl, a, b);
+                        break;
+                    case ">>":
+                        a = new Term(loc, Tag.Shr, a, b);
+                        break;
+
+                    // relational
+                    case "<":
+                        a = new Term(loc, Tag.Lt, a, b);
+                        break;
+                    case ">":
+                        a = new Term(loc, Tag.Lt, b, a);
+                        break;
+                    case "<=":
+                        a = new Term(loc, Tag.Le, a, b);
+                        break;
+                    case ">=":
+                        a = new Term(loc, Tag.Le, b, a);
+                        break;
+
+                    // equality
+                    case "==":
+                        a = new Term(loc, Tag.Eq, a, b);
+                        break;
+                    case "!=":
+                        a = new Term(loc, Tag.Not, new Term(loc, Tag.Eq, a, b));
+                        break;
+
+                    // bitwise and
+                    case "&":
+                        a = new Term(loc, Tag.BitAnd, a, b);
+                        break;
+
+                    // bitwise xor
+                    case "^":
+                        a = new Term(loc, Tag.BitXor, a, b);
+                        break;
+
+                    // bitwise or
+                    case "|":
+                        a = new Term(loc, Tag.BitOr, a, b);
+                        break;
+
+                    // and
+                    case "&&":
+                        a = new Term(loc, Tag.And, a, b);
+                        break;
+
+                    // or
+                    case "||":
+                        a = new Term(loc, Tag.Or, a, b);
+                        break;
+
+                    // conditional
+                    case "?":
+                        expect(":");
+                        a = new Term(loc, Tag.IfExpr, a, b, infix(o.prec + o.left));
+                        break;
+
+                    // assignment
+                    case "=":
+                        a = new Term(loc, Tag.Assign, a, b);
+                        break;
+                    case "*=":
+                        a = new Term(loc, Tag.MulAssign, a, b);
+                        break;
+                    case "/=":
+                        a = new Term(loc, Tag.DivAssign, a, b);
+                        break;
+                    case "%=":
+                        a = new Term(loc, Tag.RemAssign, a, b);
+                        break;
+                    case "+=":
+                        a = new Term(loc, Tag.AddAssign, a, b);
+                        break;
+                    case "-=":
+                        a = new Term(loc, Tag.SubAssign, a, b);
+                        break;
+                    case "<<=":
+                        a = new Term(loc, Tag.ShlAssign, a, b);
+                        break;
+                    case ">>=":
+                        a = new Term(loc, Tag.ShrAssign, a, b);
+                        break;
+                    case "&=":
+                        a = new Term(loc, Tag.BitAndAssign, a, b);
+                        break;
+                    case "^=":
+                        a = new Term(loc, Tag.BitXorAssign, a, b);
+                        break;
+                    case "|=":
+                        a = new Term(loc, Tag.BitOrAssign, a, b);
+                        break;
+                    case ":=":
+                        a = new Term(loc, Tag.Var, a, b);
+                        break;
+
+                    // compiler bug
+                    default:
+                        throw new ArgumentException(s);
+                }
+            }
+        }
+
+        Term expr()
+        {
+            return infix(0);
+        }
+
+        //statements
+        Term parseIf()
+        {
+            var loc = new Loc(file, line);
+            lex();
+            var a = new Term(loc, Tag.If, expr());
+            expect("\n");
+            a.add(stmts());
+            switch (tok)
+            {
+                case "elif":
+                    a.add(parseIf());
+                    break;
+                case "else":
+                    lex();
+                    expect("\n");
+                    a.add(stmts());
+                    break;
+            }
+            return a;
+        }
+
+        Term stmt()
+        {
+            var loc = new Loc(file, line);
+            Term a;
+            switch (tok)
+            {
+                case "break":
+                    lex();
+                    a = new Term(loc, Tag.Break);
+                    break;
+                case "continue":
+                    lex();
+                    a = new Term(loc, Tag.Continue);
+                    break;
+                case "assert":
+                    lex();
+                    a = new Term(loc, Tag.Assert, expr());
+                    break;
+                case "goto":
+                    lex();
+                    a = new Term(loc, Tag.Goto, id());
+                    break;
+                case ":":
+                    lex();
+                    a = new Term(loc, Tag.Label, id());
+                    break;
+                case "if":
+                    a = parseIf();
+                    expect("end");
+                    break;
+                case "while":
+                    lex();
+                    a = new Term(loc, Tag.While, expr());
+                    expect("\n");
+                    a.add(stmts());
+                    expect("end");
+                    break;
+                case "dowhile":
+                    lex();
+                    a = new Term(loc, Tag.DoWhile, expr());
+                    expect("\n");
+                    a.add(stmts());
+                    expect("end");
+                    break;
+                case "return":
+                    lex();
+                    a = new Term(loc, Tag.Return);
+                    if (tok != "\n")
+                        a.add(expr());
+                    break;
+                default:
+                    a = expr();
+                    break;
+            }
+            expect("\n");
+            return a;
+        }
+
+        Term stmts()
+        {
+            var loc = new Loc(file, line);
+            var a = new Term(loc, Tag.List);
+            for (; ; )
+            {
+                switch (tok)
+                {
+                    case "\n":
+                        lex();
+                        break;
+                    case "end":
+                    case "else":
+                    case "elif":
+                        return a;
+                    default:
+                        a.add(stmt());
+                        break;
+                }
+            }
+        }
+
         lex();
+        var r = new List<Term>();
+        while (tok != eof)
+            if (!eat("\n"))
+                r.Add(stmt());
+        return r;
+    }
+
+    class Op
+    {
+        public readonly int prec;
+        public readonly int left;
+
+        public Op(int prec, int left)
+        {
+            this.prec = prec;
+            this.left = left;
+        }
     }
 }

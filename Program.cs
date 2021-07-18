@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 class Program
 {
@@ -92,5 +93,7 @@ class Program
             Console.Error.WriteLine("Usage: aklo [options] files");
             Environment.Exit(1);
         }
+        var text = File.ReadAllText(file);
+        var program = Parser.parse(file, text);
     }
 }
