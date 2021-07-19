@@ -1,18 +1,22 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-class Term
+class Term : IReadOnlyList<Term>
 {
     public readonly Loc loc;
     public readonly Tag tag;
-    public readonly string name;
-    public readonly List<Term> contents = new List<Term>();
+    public string name;
+    public List<Term> contents = new List<Term>();
     public int intVal;
     public float floatVal;
     public double doubleVal;
     public Term type;
-    public List<Term> params1;
+    public List<Term> params_;
+    public Term ref_;
+
+    public int Count => contents.Count;
 
     public Term(Loc loc, Tag tag, params Term[] s)
     {
@@ -53,5 +57,23 @@ class Term
     public void add(Term a)
     {
         contents.Add(a);
+    }
+
+    public Term this[int i]
+    {
+        get
+        {
+            return contents[i];
+        }
+    }
+
+    public IEnumerator<Term> GetEnumerator()
+    {
+        return ((IEnumerable<Term>)contents).GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        throw new NotImplementedException();
     }
 }

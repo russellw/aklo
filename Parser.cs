@@ -13,7 +13,7 @@ static class Parser
         return '\0';
     }
 
-    static bool parseInt(string s, int base1, out int r)
+    static bool parseInt(string s, int base_, out int r)
     {
         r = 0;
         if (s.Length == 0)
@@ -21,9 +21,9 @@ static class Parser
         foreach (var c in s)
         {
             var d = digit(c);
-            if (d >= base1)
+            if (d >= base_)
                 return false;
-            r = r * base1 + d;
+            r = r * base_ + d;
         }
         return true;
     }
@@ -430,6 +430,16 @@ static class Parser
             {
                 case "int":
                     return new Term(loc, Tag.Int);
+                case "char":
+                    return new Term(loc, Tag.Char);
+                case "float":
+                    return new Term(loc, Tag.Float);
+                case "double":
+                    return new Term(loc, Tag.Double);
+                case "void":
+                    return new Term(loc, Tag.Void);
+                case "bool":
+                    return new Term(loc, Tag.Bool);
             }
             err(loc.line, string.Format("{0}: expected type", qtok(s)));
             return null;
@@ -444,7 +454,7 @@ static class Parser
             return a;
         }
 
-        List<Term> params1()
+        List<Term> params_()
         {
             expect("(");
             var r = new List<Term>();
@@ -497,7 +507,7 @@ static class Parser
 
             //identifier
             if (isId(s))
-                return new Term(loc, Tag.Id, s);
+                return new Term(loc, Tag.Ref, s);
 
             //character
             if (s[0] == '\'')
@@ -865,10 +875,9 @@ static class Parser
                 case "fn":
                     lex();
                     a = new Term(loc, Tag.Def, id());
-                    a.params1 = params1();
+                    a.params_ = params_();
                     eat(":");
-                    if (tok != "\n")
-                        a.type = type();
+                    a.type = tok == "\n" ? new Term(loc, Tag.Void) : type();
                     expect("\n");
                     a.add(stmts());
                     expect("end");
