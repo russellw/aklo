@@ -4,7 +4,7 @@ using System.Text;
 
 static class Parser
 {
-    const string eof = " ";
+    const string eof = "";
 
     static char at(string s, int i)
     {
@@ -829,7 +829,10 @@ static class Parser
                         a = new Term(loc, Tag.BitOrAssign, a, b);
                         break;
                     case ":=":
-                        a = new Term(loc, Tag.Var, a, b);
+                        if (a.tag != Tag.Ref)
+                            Etc.err(a.loc, "expected identifier");
+                        a = new Term(loc, Tag.Var, a.name);
+                        a.add(b);
                         break;
 
                     // compiler bug
@@ -874,7 +877,7 @@ static class Parser
             {
                 case "fn":
                     lex();
-                    a = new Term(loc, Tag.Def, id());
+                    a = new Term(loc, Tag.Fn, id());
                     a.params_ = params_();
                     eat(":");
                     a.type = tok == "\n" ? new Term(loc, Tag.Void) : type();
@@ -927,7 +930,7 @@ static class Parser
                 case "for":
                     lex();
                     a = new Term(loc, Tag.For, expr());
-                    expect(",");
+                    expect("in");
                     a.add(expr());
                     expect("\n");
                     a.add(stmts());
@@ -950,7 +953,7 @@ static class Parser
         Term stmts()
         {
             var loc = new Loc(file, line);
-            var a = new Term(loc, Tag.List);
+            var a = new Term(loc, Tag.Block);
             for (; ; )
             {
                 switch (tok)

@@ -57,7 +57,6 @@ enum Tag
     Label,
     Return,
     Assert,
-    Lambda,
     Quote,
     Debug,
     And,
@@ -65,7 +64,7 @@ enum Tag
     Dot,
     For,
     Switch,
-    Def,
+    Fn,
     At,
     Int,
     Void,
@@ -74,4 +73,5 @@ enum Tag
     Double,
     Char,
     Ref,
+    Block,
 }
