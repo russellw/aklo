@@ -315,12 +315,12 @@ static class Parser
             //number
             if (c == '0' && (text[ti + 1] == 'x' || text[ti + 1] == 'X'))
             {
-                while (isWordPart(c))
+                while (isWordPart(text[ti]))
                     ti++;
                 if (text[ti] == '.')
                     do
                         ti++;
-                    while (isWordPart(c));
+                    while (isWordPart(text[ti]));
                 switch (text[ti - 1])
                 {
                     case 'p':
@@ -328,7 +328,7 @@ static class Parser
                         if (text[ti] == '-' || text[ti] == '+')
                         {
                             ti++;
-                            while (isWordPart(c))
+                            while (isWordPart(text[ti]))
                                 ti++;
                         }
                         break;
@@ -338,12 +338,12 @@ static class Parser
             }
             if (isDigit(c) || (c == '.' && isDigit(text[ti + 1])))
             {
-                while (isWordPart(c))
+                while (isWordPart(text[ti]))
                     ti++;
                 if (text[ti] == '.')
                     do
                         ti++;
-                    while (isWordPart(c));
+                    while (isWordPart(text[ti]));
                 switch (text[ti - 1])
                 {
                     case 'e':
@@ -351,7 +351,7 @@ static class Parser
                         if (text[ti] == '-' || text[ti] == '+')
                         {
                             ti++;
-                            while (isWordPart(c))
+                            while (isWordPart(text[ti]))
                                 ti++;
                         }
                         break;
@@ -522,7 +522,7 @@ static class Parser
             }
 
             //string
-            if (s[0] == '\'')
+            if (s[0] == '"')
             {
                 s = unquote(s);
                 var a = new Term(loc, Tag.List);
