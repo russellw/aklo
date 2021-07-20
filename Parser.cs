@@ -201,14 +201,14 @@ static class Parser
         return '\'' + s + '\'';
     }
 
-    public static List<Term> parse(string file, string text)
+    public static List<Module> parse(string file, string text)
     {
         if (!text.EndsWith("\n"))
             text += '\n';
 
         int ti = 0;
         int line = 1;
-        string tok;
+        string tok = "\n";
 
         void err(int line, string msg)
         {
@@ -231,17 +231,15 @@ static class Parser
             var c = text[ti];
 
             //newline
-            if (c == '\n')
+            if (c == '\n' || c == ';')
             {
                 ti++;
-                line++;
-                tok = "\n";
-                return;
-            }
-            if (c == ';')
-            {
-                ti++;
-                tok = "\n";
+                if (c == '\n')
+                    line++;
+                if (tok == "\n")
+                    lex();
+                else
+                    tok = "\n";
                 return;
             }
 
@@ -961,9 +959,6 @@ static class Parser
             {
                 switch (tok)
                 {
-                    case "\n":
-                        lex();
-                        break;
                     case "end":
                     case "else":
                     case "elif":
@@ -976,11 +971,22 @@ static class Parser
         }
 
         lex();
-        var r = new List<Term>();
+        var module = new Module();
         while (tok != eof)
-            if (!eat("\n"))
-                r.Add(stmt());
-        return r;
+        {
+            if (eat("private"))
+            {
+                eat(":");
+                expect("\n");
+                break;
+            }
+            module.publicSection.Add(stmt());
+        }
+        while (tok != eof)
+            module.privateSection.Add(stmt());
+        var program = new List<Module>();
+        program.Add(module);
+        return program;
     }
 
     class Op

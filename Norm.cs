@@ -37,10 +37,9 @@ static class Norm
             resolve(m, b);
     }
 
-    public static void norm(List<Term> program)
+    public static void norm(List<Module> program)
     {
-        var m = new Dictionary<string, Term>();
-        foreach (var a in program)
-            resolve(m, a);
+        var s = program[0].publicSection;
+        Etc.debug(s);
     }
 }
