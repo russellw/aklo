@@ -67,6 +67,39 @@ class Term : IReadOnlyList<Term>
         }
     }
 
+    static void str(int indent, Term a, StringBuilder sb)
+    {
+        for (var i = 0; i < indent; i++)
+            sb.Append(' ');
+        sb.Append(a.tag);
+        sb.Append(' ');
+        switch (a.tag)
+        {
+            case Tag.Int:
+                sb.Append(a.intVal);
+                break;
+            case Tag.Float:
+                sb.Append(a.floatVal);
+                break;
+            case Tag.Double:
+                sb.Append(a.doubleVal);
+                break;
+        }
+        if (a.name != null)
+            sb.Append(a.name);
+        sb.Append('\n');
+        foreach (var b in a)
+            str(indent + 1, b, sb);
+    }
+
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+        sb.Append('\n');
+        str(0, this, sb);
+        return sb.ToString();
+    }
+
     public IEnumerator<Term> GetEnumerator()
     {
         return ((IEnumerable<Term>)contents).GetEnumerator();

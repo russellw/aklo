@@ -595,6 +595,8 @@ static class Parser
                         a = new Term(loc, Tag.Call, a);
                         args(a, ")");
                         break;
+                    default:
+                        return a;
                 }
             }
         }
