@@ -21,4 +21,9 @@ static class Etc
             Console.Write(t);
         }
     }
+
+    public static void debug(object a, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+    {
+        Console.WriteLine("{0}:{1}: {2}", file, line, a);
+    }
 }
