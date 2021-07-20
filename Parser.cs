@@ -357,7 +357,7 @@ static class Parser
             }
 
             //punctuation
-            switch (substr(text, i, 3))
+            switch (substr(text, i, i + 3))
             {
                 case "<<=":
                 case ">>=":
@@ -365,7 +365,7 @@ static class Parser
                     tok = substr(text, i, ti);
                     return;
             }
-            switch (substr(text, i, 2))
+            switch (substr(text, i, i + 2))
             {
                 case "==":
                 case "!=":
@@ -385,6 +385,7 @@ static class Parser
                 case "||":
                 case "&=":
                 case "|=":
+                case ":=":
                 case "^=":
                     ti += 2;
                     tok = substr(text, i, ti);

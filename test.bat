@@ -3,5 +3,5 @@ if "%VCINSTALLDIR%"=="" call "C:\Program Files (x86)\Microsoft Visual Studio\201
 csc -debug -out:aklo.exe *.cs
 if %errorlevel% neq 0 goto :eof
 
-aklo.exe %*
+aklo.exe test.k
 if %errorlevel% neq 0 goto :eof
