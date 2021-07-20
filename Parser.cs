@@ -117,6 +117,12 @@ static class Parser
         while (i < s.Length - 1)
         {
             var c = s[i++];
+            if (c != '\\')
+            {
+                sb.Append(c);
+                continue;
+            }
+            c = s[i++];
             switch (c)
             {
                 case 'a':
@@ -485,19 +491,17 @@ static class Parser
             switch (s)
             {
                 case "false":
-                    return new Term(loc, 0);
+                    return new Term(loc, Tag.False);
                 case "true":
-                    return new Term(loc, 1);
+                    return new Term(loc, Tag.True);
                 case "(":
                     {
-                        lex();
                         var a = expr();
                         expect(")");
                         return a;
                     }
                 case "[":
                     {
-                        lex();
                         var a = new Term(loc, Tag.List);
                         args(a, "]");
                         return a;

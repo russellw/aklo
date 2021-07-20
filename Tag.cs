@@ -8,6 +8,8 @@ enum Tag
     PostInc,
     PostDec,
     Call,
+    True,
+    False,
     Inc,
     Dec,
     Not,
