@@ -107,6 +107,48 @@ static class Norm
                     a[0] = term(loop, a[0]);
                     block.Add(a);
                     break;
+                case Tag.Or:
+                    {
+                        var falseBlock = new Term(a.loc, Tag.Block, "orFalse");
+                        var afterBlock = new Term(a.loc, Tag.Block, "orAfter");
+                        var r = local(a.loc, "or");
+
+                        //condition
+                        var x = term(loop, a[0]);
+                        block.Add(new Term(a.loc, Tag.Assign, r, x));
+                        block.Add(new Term(a.loc, Tag.If, x, afterBlock, falseBlock));
+
+                        //false
+                        go(falseBlock);
+                        var y = term(loop, a[1]);
+                        block.Add(new Term(a.loc, Tag.Assign, r, y));
+                        block.Add(new Term(a.loc, Tag.Goto, afterBlock));
+
+                        //after
+                        go(afterBlock);
+                        return r;
+                    }
+                case Tag.And:
+                    {
+                        var trueBlock = new Term(a.loc, Tag.Block, "andTrue");
+                        var afterBlock = new Term(a.loc, Tag.Block, "andAfter");
+                        var r = local(a.loc, "and");
+
+                        //condition
+                        var x = term(loop, a[0]);
+                        block.Add(new Term(a.loc, Tag.Assign, r, x));
+                        block.Add(new Term(a.loc, Tag.If, x, trueBlock, afterBlock));
+
+                        //true
+                        go(trueBlock);
+                        var y = term(loop, a[1]);
+                        block.Add(new Term(a.loc, Tag.Assign, r, y));
+                        block.Add(new Term(a.loc, Tag.Goto, afterBlock));
+
+                        //after
+                        go(afterBlock);
+                        return r;
+                    }
                 case Tag.Not:
                     {
                         var trueBlock = new Term(a.loc, Tag.Block, "notTrue");
@@ -115,8 +157,8 @@ static class Norm
                         var r = local(a.loc, "not");
 
                         //condition
-                        var cond = term(loop, a[0]);
-                        block.Add(new Term(a.loc, Tag.If, cond, trueBlock, falseBlock));
+                        var x = term(loop, a[0]);
+                        block.Add(new Term(a.loc, Tag.If, x, trueBlock, falseBlock));
 
                         //true
                         go(trueBlock);
@@ -133,8 +175,25 @@ static class Norm
                         return r;
                     }
                 case Tag.Eq:
+                case Tag.Le:
+                case Tag.Lt:
                 case Tag.True:
                 case Tag.False:
+                case Tag.Add:
+                case Tag.Sub:
+                case Tag.Mul:
+                case Tag.Div:
+                case Tag.Rem:
+                case Tag.Int:
+                case Tag.Float:
+                case Tag.Double:
+                case Tag.Neg:
+                case Tag.BitAnd:
+                case Tag.BitOr:
+                case Tag.BitXor:
+                case Tag.BitNot:
+                case Tag.Shl:
+                case Tag.Shr:
                     for (var i = 0; i < a.Count; i++)
                         a[i] = term(loop, a[i]);
                     break;
