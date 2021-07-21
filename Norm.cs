@@ -206,6 +206,7 @@ static class Norm
         }
 
         term(new Loop(null, null), body);
+        block.Add(new Term(f.loc, Tag.Return, new Term(f.loc, Tag.False)));
         f.Add(block);
     }
 

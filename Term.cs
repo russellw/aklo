@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 class Term : IList<Term>
@@ -74,36 +75,43 @@ class Term : IList<Term>
         }
     }
 
-    static void str(int indent, Term a, StringBuilder sb)
+    public static void debug(Term a, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
     {
-        for (var i = 0; i < indent; i++)
-            sb.Append(' ');
-        sb.Append(a.tag);
-        sb.Append(' ');
-        switch (a.tag)
-        {
-            case Tag.Int:
-                sb.Append(a.intVal);
-                break;
-            case Tag.Float:
-                sb.Append(a.floatVal);
-                break;
-            case Tag.Double:
-                sb.Append(a.doubleVal);
-                break;
-        }
-        if (a.name != null)
-            sb.Append(a.name);
-        sb.Append('\n');
+        Console.WriteLine("{0}:{1}: {2}", file, line, a);
         foreach (var b in a)
-            str(indent + 1, b, sb);
+        {
+            Console.Write("    ");
+            Console.WriteLine(b);
+            if (b.tag == Tag.Block)
+            {
+                foreach (var c in b)
+                {
+                    Console.Write("        ");
+                    Console.WriteLine(c);
+                }
+            }
+        }
     }
 
     public override string ToString()
     {
         var sb = new StringBuilder();
-        sb.Append('\n');
-        str(0, this, sb);
+        sb.Append(tag);
+        sb.Append(' ');
+        switch (tag)
+        {
+            case Tag.Int:
+                sb.Append(intVal);
+                break;
+            case Tag.Float:
+                sb.Append(floatVal);
+                break;
+            case Tag.Double:
+                sb.Append(doubleVal);
+                break;
+        }
+        if (name != null)
+            sb.Append(name);
         return sb.ToString();
     }
 

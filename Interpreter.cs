@@ -111,6 +111,7 @@ static class Interpreter
 
     public static void run(Term f)
     {
+        Term.debug(f);
         var closure = new Closure(null, f);
         var args = new Term[0];
         apply(closure, args);
