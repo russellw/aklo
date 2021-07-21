@@ -99,7 +99,14 @@ static class Interpreter
                     {
                         var x = (bool)eval(env, a[0]);
                         if (!x)
-                            Etc.err(a.loc, "asset failed");
+                            Etc.err(a.loc, "assert failed");
+                        break;
+                    }
+                case Tag.If:
+                    {
+                        var cond = (bool)eval(env, a[0]);
+                        block = a[cond ? 1 : 2];
+                        ip = 0;
                         break;
                     }
                 default:

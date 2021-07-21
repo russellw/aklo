@@ -6,8 +6,8 @@
 
 //boolean literals
 assert true==true
-/*
 assert true!=false
+/*
 
 //logic
 assert !true==false
