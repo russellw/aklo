@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-class Term : IReadOnlyList<Term>
+class Term : IList<Term>
 {
     public readonly Loc loc;
     public readonly Tag tag;
@@ -14,9 +14,12 @@ class Term : IReadOnlyList<Term>
     public double doubleVal;
     public Term type;
     public List<Term> params_ = new List<Term>();
+    public List<Term> locals = new List<Term>();
     public Term ref_;
 
     public int Count => contents.Count;
+
+    public bool IsReadOnly => throw new NotImplementedException();
 
     public Term(Loc loc, Tag tag, params Term[] s)
     {
@@ -54,7 +57,7 @@ class Term : IReadOnlyList<Term>
         this.doubleVal = doubleVal;
     }
 
-    public void add(Term a)
+    public void Add(Term a)
     {
         contents.Add(a);
     }
@@ -64,6 +67,10 @@ class Term : IReadOnlyList<Term>
         get
         {
             return contents[i];
+        }
+        set
+        {
+            contents[i] = value;
         }
     }
 
@@ -106,6 +113,41 @@ class Term : IReadOnlyList<Term>
     }
 
     IEnumerator IEnumerable.GetEnumerator()
+    {
+        throw new NotImplementedException();
+    }
+
+    public int IndexOf(Term item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Insert(int index, Term item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void RemoveAt(int index)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Clear()
+    {
+        contents.Clear();
+    }
+
+    public bool Contains(Term item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void CopyTo(Term[] array, int arrayIndex)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Remove(Term item)
     {
         throw new NotImplementedException();
     }

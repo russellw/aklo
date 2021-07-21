@@ -51,41 +51,52 @@ static class Norm
 
     static void flatten(Term f)
     {
+        //local variables
+        Term local(Loc loc, string name)
+        {
+            var a = new Term(loc, Tag.Var, name);
+            f.locals.Add(a);
+            return a;
+        }
+
+        //blocks
         var body = f[0];
-        f.contents = new List<Term>();
+        f.Clear();
+
         var block = new Term(f.loc, Tag.Block);
 
         void go(Term b)
         {
-            f.add(block);
+            f.Add(block);
             block = b;
         }
 
+        //flatten terms
         Term term(Loop loop, Term a)
         {
             switch (a.tag)
             {
                 case Tag.Goto:
-                    f.add(a);
+                    block.Add(a);
                     go(new Term(a.loc, Tag.Block));
                     break;
                 case Tag.Label:
                     {
                         var b = new Term(a.loc, Tag.Block, a.name);
-                        f.add(new Term(a.loc, Tag.Goto, b));
+                        block.Add(new Term(a.loc, Tag.Goto, b));
                         go(b);
                         break;
                     }
                 case Tag.Break:
                     if (loop.breakTarget == null)
                         Etc.err(a.loc, "break without loop");
-                    f.add(new Term(a.loc, Tag.Goto, loop.breakTarget));
+                    block.Add(new Term(a.loc, Tag.Goto, loop.breakTarget));
                     go(new Term(a.loc, Tag.Block, "breakAfter"));
                     break;
                 case Tag.Continue:
                     if (loop.continueTarget == null)
                         Etc.err(a.loc, "continue without loop");
-                    f.add(new Term(a.loc, Tag.Goto, loop.continueTarget));
+                    block.Add(new Term(a.loc, Tag.Goto, loop.continueTarget));
                     go(new Term(a.loc, Tag.Block, "continueAfter"));
                     break;
                 case Tag.Block:
@@ -94,7 +105,38 @@ static class Norm
                     break;
                 case Tag.Assert:
                     a[0] = term(loop, a[0]);
-                    f.add(a);
+                    block.Add(a);
+                    break;
+                case Tag.Not:
+                    {
+                        var trueBlock = new Term(a.loc, Tag.Block, "notTrue");
+                        var falseBlock = new Term(a.loc, Tag.Block, "notFalse");
+                        var afterBlock = new Term(a.loc, Tag.Block, "notAfter");
+                        var r = local(a.loc, "not");
+
+                        //condition
+                        var cond = term(loop, a[0]);
+                        block.Add(new Term(a.loc, Tag.If, cond, trueBlock, falseBlock));
+
+                        //true
+                        go(trueBlock);
+                        block.Add(new Term(a.loc, Tag.Assign, r, new Term(a.loc, Tag.False)));
+                        block.Add(new Term(a.loc, Tag.Goto, afterBlock));
+
+                        //false
+                        go(falseBlock);
+                        block.Add(new Term(a.loc, Tag.Assign, r, new Term(a.loc, Tag.True)));
+                        block.Add(new Term(a.loc, Tag.Goto, afterBlock));
+
+                        //after
+                        go(afterBlock);
+                        return r;
+                    }
+                case Tag.Eq:
+                case Tag.True:
+                case Tag.False:
+                    for (var i = 0; i < a.Count; i++)
+                        a[i] = term(loop, a[i]);
                     break;
                 default:
                     throw new Exception(a.ToString());
@@ -103,7 +145,7 @@ static class Norm
         }
 
         term(new Loop(null, null), body);
-        f.add(block);
+        f.Add(block);
     }
 
     public static void norm(List<Module> program)
@@ -113,7 +155,7 @@ static class Norm
         var body = new Term(new Loc(module.file, 1), Tag.Block);
         body.contents = module.publicSection;
         var f = new Term(new Loc(module.file, 1), Tag.Fn);
-        f.add(body);
+        f.Add(body);
 
         //convert to normal form
         resolve(new Dictionary<string, Term>(), f);

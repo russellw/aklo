@@ -475,7 +475,7 @@ static class Parser
         {
             if (tok != rbracket)
                 do
-                    a.add(expr());
+                    a.Add(expr());
                 while (eat(","));
             expect(rbracket);
         }
@@ -836,7 +836,7 @@ static class Parser
                         if (a.tag != Tag.Ref)
                             Etc.err(a.loc, "expected identifier");
                         a = new Term(loc, Tag.Var, a.name);
-                        a.add(b);
+                        a.Add(b);
                         break;
 
                     // compiler bug
@@ -858,16 +858,16 @@ static class Parser
             lex();
             var a = new Term(loc, Tag.If, expr());
             expect("\n");
-            a.add(stmts());
+            a.Add(stmts());
             switch (tok)
             {
                 case "elif":
-                    a.add(parseIf());
+                    a.Add(parseIf());
                     break;
                 case "else":
                     lex();
                     expect("\n");
-                    a.add(stmts());
+                    a.Add(stmts());
                     break;
             }
             return a;
@@ -886,7 +886,7 @@ static class Parser
                     eat(":");
                     a.type = tok == "\n" ? new Term(loc, Tag.Void) : type();
                     expect("\n");
-                    a.add(stmts());
+                    a.Add(stmts());
                     expect("end");
                     break;
                 case "break":
@@ -921,30 +921,30 @@ static class Parser
                     lex();
                     a = new Term(loc, Tag.While, expr());
                     expect("\n");
-                    a.add(stmts());
+                    a.Add(stmts());
                     expect("end");
                     break;
                 case "dowhile":
                     lex();
                     a = new Term(loc, Tag.DoWhile, expr());
                     expect("\n");
-                    a.add(stmts());
+                    a.Add(stmts());
                     expect("end");
                     break;
                 case "for":
                     lex();
                     a = new Term(loc, Tag.For, expr());
                     expect("in");
-                    a.add(expr());
+                    a.Add(expr());
                     expect("\n");
-                    a.add(stmts());
+                    a.Add(stmts());
                     expect("end");
                     break;
                 case "return":
                     lex();
                     a = new Term(loc, Tag.Return);
                     if (tok != "\n")
-                        a.add(expr());
+                        a.Add(expr());
                     break;
                 default:
                     a = expr();
@@ -967,7 +967,7 @@ static class Parser
                     case "elif":
                         return a;
                     default:
-                        a.add(stmt());
+                        a.Add(stmt());
                         break;
                 }
             }
