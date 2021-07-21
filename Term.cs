@@ -13,7 +13,7 @@ class Term : IReadOnlyList<Term>
     public float floatVal;
     public double doubleVal;
     public Term type;
-    public List<Term> params_;
+    public List<Term> params_ = new List<Term>();
     public Term ref_;
 
     public int Count => contents.Count;

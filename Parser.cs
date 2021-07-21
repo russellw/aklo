@@ -218,8 +218,7 @@ static class Parser
 
         void err(int line, string msg)
         {
-            Console.WriteLine("{0}:{1}: {2}", file, line, msg);
-            Environment.Exit(1);
+            Etc.err(new Loc(file, line), msg);
         }
 
         //tokenizer
@@ -975,7 +974,7 @@ static class Parser
         }
 
         lex();
-        var module = new Module();
+        var module = new Module(file);
         while (tok != eof)
         {
             if (eat("private"))

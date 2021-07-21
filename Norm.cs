@@ -37,9 +37,86 @@ static class Norm
             resolve(m, b);
     }
 
+    class Loop
+    {
+        public Term continueTarget;
+        public Term breakTarget;
+
+        public Loop(Term continueTarget, Term breakTarget)
+        {
+            this.continueTarget = continueTarget;
+            this.breakTarget = breakTarget;
+        }
+    }
+
+    static void flatten(Term f)
+    {
+        var body = f[0];
+        f.contents = new List<Term>();
+        var block = new Term(f.loc, Tag.Block);
+
+        void go(Term b)
+        {
+            f.add(block);
+            block = b;
+        }
+
+        Term term(Loop loop, Term a)
+        {
+            switch (a.tag)
+            {
+                case Tag.Goto:
+                    f.add(a);
+                    go(new Term(a.loc, Tag.Block));
+                    break;
+                case Tag.Label:
+                    {
+                        var b = new Term(a.loc, Tag.Block, a.name);
+                        f.add(new Term(a.loc, Tag.Goto, b));
+                        go(b);
+                        break;
+                    }
+                case Tag.Break:
+                    if (loop.breakTarget == null)
+                        Etc.err(a.loc, "break without loop");
+                    f.add(new Term(a.loc, Tag.Goto, loop.breakTarget));
+                    go(new Term(a.loc, Tag.Block, "breakAfter"));
+                    break;
+                case Tag.Continue:
+                    if (loop.continueTarget == null)
+                        Etc.err(a.loc, "continue without loop");
+                    f.add(new Term(a.loc, Tag.Goto, loop.continueTarget));
+                    go(new Term(a.loc, Tag.Block, "continueAfter"));
+                    break;
+                case Tag.Block:
+                    foreach (var b in a)
+                        term(loop, b);
+                    break;
+                case Tag.Assert:
+                    a[0] = term(loop, a[0]);
+                    f.add(a);
+                    break;
+                default:
+                    throw new Exception(a.ToString());
+            }
+            return a;
+        }
+
+        term(new Loop(null, null), body);
+        f.add(block);
+    }
+
     public static void norm(List<Module> program)
     {
-        var s = program[0].publicSection;
-        Etc.debug(s);
+        //wrap program in function
+        var module = program[0];
+        var body = new Term(new Loc(module.file, 1), Tag.Block);
+        body.contents = module.publicSection;
+        var f = new Term(new Loc(module.file, 1), Tag.Fn);
+        f.add(body);
+
+        //convert to normal form
+        resolve(new Dictionary<string, Term>(), f);
+        flatten(f);
     }
 }
