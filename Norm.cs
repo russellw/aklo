@@ -207,7 +207,7 @@ static class Norm
         f.Add(block);
     }
 
-    public static void norm(List<Module> program)
+    public static Term norm(List<Module> program)
     {
         //wrap program in function
         var module = program[0];
@@ -219,5 +219,6 @@ static class Norm
         //convert to normal form
         resolve(new Dictionary<string, Term>(), f);
         flatten(f);
+        return f;
     }
 }

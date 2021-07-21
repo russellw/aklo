@@ -95,6 +95,7 @@ class Program
         }
         var text = File.ReadAllText(file);
         var program = Parser.parse(file, text);
-        Norm.norm(program);
+        var f = Norm.norm(program);
+        Interpreter.run(f);
     }
 }
