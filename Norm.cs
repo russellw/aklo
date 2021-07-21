@@ -174,19 +174,20 @@ static class Norm
                         go(afterBlock);
                         return r;
                     }
+                case Tag.True:
+                case Tag.False:
+                case Tag.Int:
+                case Tag.Float:
+                case Tag.Double:
+                    break;
                 case Tag.Eq:
                 case Tag.Le:
                 case Tag.Lt:
-                case Tag.True:
-                case Tag.False:
                 case Tag.Add:
                 case Tag.Sub:
                 case Tag.Mul:
                 case Tag.Div:
                 case Tag.Rem:
-                case Tag.Int:
-                case Tag.Float:
-                case Tag.Double:
                 case Tag.Neg:
                 case Tag.BitAnd:
                 case Tag.BitOr:
@@ -196,6 +197,7 @@ static class Norm
                 case Tag.Shr:
                     for (var i = 0; i < a.Count; i++)
                         a[i] = term(loop, a[i]);
+                    block.Add(a);
                     break;
                 default:
                     throw new Exception(a.ToString());
