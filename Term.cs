@@ -13,7 +13,7 @@ class Term : IList<Term>
     public int intVal;
     public float floatVal;
     public double doubleVal;
-    public Term type;
+    public Term type_;
     public List<Term> params_ = new List<Term>();
     public List<Term> locals = new List<Term>();
     public Term ref_;
@@ -159,4 +159,27 @@ class Term : IList<Term>
     {
         throw new NotImplementedException();
     }
+
+    public static Term type(Term a)
+    {
+        switch (a.tag)
+        {
+            case Tag.Var:
+                return a.type_;
+            case Tag.Int:
+            case Tag.Float:
+            case Tag.Double:
+                return a;
+            case Tag.True:
+            case Tag.False:
+            case Tag.Eq:
+            case Tag.Lt:
+            case Tag.Le:
+                return new Term(a.loc, Tag.Bool);
+            case Tag.Neg:
+                return type(a[0]);
+        }
+        throw new Exception(a.ToString());
+    }
+}
 }

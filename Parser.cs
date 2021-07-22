@@ -454,7 +454,7 @@ static class Parser
             var loc = new Loc(file, line);
             var a = new Term(loc, Tag.Var, id());
             eat(":");
-            a.type = type();
+            a.type_ = type();
             return a;
         }
 
@@ -884,7 +884,7 @@ static class Parser
                     a = new Term(loc, Tag.Fn, id());
                     a.params_ = params_();
                     eat(":");
-                    a.type = tok == "\n" ? new Term(loc, Tag.Void) : type();
+                    a.type_ = tok == "\n" ? new Term(loc, Tag.Void) : type();
                     expect("\n");
                     a.Add(stmts());
                     expect("end");
