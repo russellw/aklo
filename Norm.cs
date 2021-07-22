@@ -229,10 +229,6 @@ static class Norm
                     foreach (var b in a)
                         term(loop, b);
                     break;
-                case Tag.Assert:
-                    a[0] = term(loop, a[0]);
-                    block.Add(a);
-                    break;
                 case Tag.Or:
                     {
                         var falseBlock = new Term(a.loc, Tag.Block, "orFalse");
@@ -322,6 +318,8 @@ static class Norm
                 case Tag.BitNot:
                 case Tag.Shl:
                 case Tag.Shr:
+                case Tag.Debug:
+                case Tag.Assert:
                     for (var i = 0; i < a.Count; i++)
                         a[i] = term(loop, a[i]);
                     block.Add(a);

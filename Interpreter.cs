@@ -222,6 +222,12 @@ static class Interpreter
                             Etc.err(a.loc, "assert failed");
                         break;
                     }
+                case Tag.Debug:
+                    {
+                        var x = eval(env, a[0]);
+                        Console.WriteLine("{0}:{1}: {2}", a.loc.file, a.loc.line, x);
+                        break;
+                    }
                 case Tag.If:
                     {
                         var cond = (bool)eval(env, a[0]);
