@@ -58,6 +58,8 @@ static class Interpreter
     {
         switch (a.tag)
         {
+            case Tag.Var:
+                return get(env, a);
             case Tag.Int:
                 return a.intVal;
             case Tag.Float:
@@ -68,11 +70,28 @@ static class Interpreter
                 return true;
             case Tag.False:
                 return false;
+            case Tag.Neg:
+                {
+                    dynamic x = eval(env, a[0]);
+                    return -x;
+                }
             case Tag.Eq:
                 {
                     dynamic x = eval(env, a[0]);
                     dynamic y = eval(env, a[1]);
                     return x == y;
+                }
+            case Tag.Lt:
+                {
+                    dynamic x = eval(env, a[0]);
+                    dynamic y = eval(env, a[1]);
+                    return x < y;
+                }
+            case Tag.Le:
+                {
+                    dynamic x = eval(env, a[0]);
+                    dynamic y = eval(env, a[1]);
+                    return x <= y;
                 }
         }
         throw new Exception(a.ToString());
@@ -82,6 +101,12 @@ static class Interpreter
     {
         var env = new Env(closure.env);
         var f = closure.f;
+
+        //local variables
+        foreach (var a in f.locals)
+            env.m[a] = null;
+
+        //code
         var block = f[0];
         var ip = 0;
         for (; ; )
@@ -95,6 +120,14 @@ static class Interpreter
                     break;
                 case Tag.Return:
                     return eval(env, a[0]);
+                case Tag.Assign:
+                    {
+                        var x = a[0];
+                        var y = eval(env, a[1]);
+                        set(env, x, y);
+                        env.m[a] = y;
+                        break;
+                    }
                 case Tag.Assert:
                     {
                         var x = (bool)eval(env, a[0]);
@@ -118,7 +151,6 @@ static class Interpreter
 
     public static void run(Term f)
     {
-        Term.debug(f);
         var closure = new Closure(null, f);
         var args = new Term[0];
         apply(closure, args);
