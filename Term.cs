@@ -171,6 +171,16 @@ class Term : IList<Term>
             case Tag.Float:
             case Tag.Double:
                 return a;
+            case Tag.BitAnd:
+            case Tag.BitOr:
+            case Tag.BitXor:
+            case Tag.BitNot:
+            case Tag.Shl:
+            case Tag.Shr:
+                return new Term(a.loc, Tag.Int);
+            case Tag.And:
+            case Tag.Or:
+            case Tag.Not:
             case Tag.True:
             case Tag.False:
             case Tag.Eq:

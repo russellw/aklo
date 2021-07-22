@@ -4,6 +4,7 @@ using System.Text;
 
 static class Norm
 {
+    //resolve identifiers (other than labels)
     static void resolve(Dictionary<string, Term> m, Term a)
     {
         switch (a.tag)
@@ -37,6 +38,25 @@ static class Norm
             resolve(m, b);
     }
 
+    //promote types where needed
+    static List<Tag> numTypes = new List<Tag> { Tag.Bool, Tag.Int, Tag.Float, Tag.Double };
+
+    static int rank(Term t)
+    {
+        return numTypes.IndexOf(t.tag);
+    }
+
+    static Term common(Term t,Term u)
+    {
+        var ti = rank(t);
+        if (ti < 0)
+            return null;
+        var ui = rank(u);
+        if (ui < 0)
+            return null;
+        return new Term(t.loc, numTypes[Math.Max(ti, ui)]);
+    }
+
     static Term cast(Term a,Term t)
     {
         if (Term.eq(Term.type(a), t))
@@ -46,6 +66,33 @@ static class Norm
         return a;
     }
 
+    static void promote(Term a)
+    {
+        foreach (var b in a)
+            promote(b);
+        switch (a.tag)
+        {
+            case Tag.Lt:
+                {
+                    var t = common(a[0], a[1]);
+                    if (t == null)
+                        break;
+                    if (t.tag == Tag.Bool)
+                        t = new Term(t.loc, Tag.Int);
+                    for (var i = 0; i < a.Count; i++)
+                        a[i] = cast(a[i], t);
+                    break;
+                }
+            case Tag.And:
+            case Tag.Or:
+            case Tag.Not:
+                for (var i = 0; i < a.Count; i++)
+                    a[i] = cast(a[i], new Term(a.loc, Tag.Bool));
+                break;
+        }
+    }
+
+    //flatten functions to lists of basic blocks
     class Loop
     {
         public Term continueTarget;
@@ -189,6 +236,7 @@ static class Norm
                 case Tag.Float:
                 case Tag.Double:
                     break;
+                case Tag.Cast:
                 case Tag.Eq:
                 case Tag.Le:
                 case Tag.Lt:
@@ -219,6 +267,7 @@ static class Norm
         f.Add(block);
     }
 
+    //top level
     public static Term norm(List<Module> program)
     {
         //wrap program in function
@@ -230,6 +279,7 @@ static class Norm
 
         //convert to normal form
         resolve(new Dictionary<string, Term>(), f);
+        promote(f);
         flatten(f);
         return f;
     }
