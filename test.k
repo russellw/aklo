@@ -122,3 +122,6 @@ assert false^1==1
 assert 1+2*3==7
 assert 1-2-3==-4
 assert 999<1000&&1000<1001
+
+//cast
+assert 1.1!int==1

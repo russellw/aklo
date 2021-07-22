@@ -580,6 +580,11 @@ static class Parser
                 var loc = new Loc(file, line);
                 switch (tok)
                 {
+                    case "!":
+                        lex();
+                        a = new Term(loc, Tag.Cast, a);
+                        a.type_ = type();
+                        break;
                     case "++":
                         lex();
                         return new Term(loc, Tag.PostInc, a);
