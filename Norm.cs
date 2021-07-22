@@ -37,6 +37,15 @@ static class Norm
             resolve(m, b);
     }
 
+    static Term cast(Term a,Term t)
+    {
+        if (Term.eq(Term.type(a), t))
+            return a;
+        a = new Term(a.loc, Tag.Cast, a);
+        a.type_ = t;
+        return a;
+    }
+
     class Loop
     {
         public Term continueTarget;

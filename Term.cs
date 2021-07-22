@@ -165,6 +165,7 @@ class Term : IList<Term>
         switch (a.tag)
         {
             case Tag.Var:
+            case Tag.Cast:
                 return a.type_;
             case Tag.Int:
             case Tag.Float:
@@ -181,5 +182,16 @@ class Term : IList<Term>
         }
         throw new Exception(a.ToString());
     }
-}
+
+    public static bool eq(Term a, Term b)
+    {
+        if (a.tag != b.tag)
+            return false;
+        if (a.Count != b.Count)
+            return false;
+        for (var i = 0; i < a.Count; i++)
+            if (!eq(a[i], b[i]))
+                return false;
+        return true;
+    }
 }
