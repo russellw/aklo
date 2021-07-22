@@ -129,3 +129,32 @@ assert 1.1!int==1
 //variables
 i: =5
 assert i==5
+
+i=6
+assert i==6
+
+j: int=i+1+2
+assert j==9
+
+k:=j+1
+assert k==10
+
+bo:=true&&false
+assert bo==false
+
+bo=true||false
+assert bo==true
+
+bo=!true
+assert bo==false
+
+i=j=99
+assert i==99&&j==99
+
+i:=j=9
+assert i==9&&j==9
+
+i:=5
+j:=i+=2
+assert i==7
+assert j==7

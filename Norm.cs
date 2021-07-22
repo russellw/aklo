@@ -25,7 +25,7 @@ static class Norm
                 //so we need to recur before adding the new name
                 //instead of the usual order
                 resolve(m, a[0]);
-                m.Add(a.name, a);
+                m[a.name] = a;
                 return;
             case Tag.Fn:
             case Tag.For:

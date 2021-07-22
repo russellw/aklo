@@ -195,6 +195,7 @@ class Term : IList<Term>
             case Tag.Mul:
             case Tag.Div:
             case Tag.Rem:
+            case Tag.Assign:
                 return type(a[0]);
         }
         throw new Exception(a.ToString());
