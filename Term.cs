@@ -6,8 +6,8 @@ using System.Text;
 
 class Term : IList<Term>
 {
-    public readonly Loc loc;
-    public readonly Tag tag;
+    public Loc loc;
+    public Tag tag;
     public string name;
     public List<Term> contents = new List<Term>();
     public int intVal;
@@ -167,6 +167,8 @@ class Term : IList<Term>
             case Tag.Var:
             case Tag.Cast:
                 return a.type_;
+            case Tag.Ref:
+                return type(a.ref_);
             case Tag.Int:
             case Tag.Float:
             case Tag.Double:

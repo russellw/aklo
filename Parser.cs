@@ -388,7 +388,6 @@ static class Parser
                 case "||":
                 case "&=":
                 case "|=":
-                case ":=":
                 case "^=":
                     ti += 2;
                     tok = substr(text, i, ti);
@@ -706,7 +705,6 @@ static class Parser
         op("&=", 0);
         op("^=", 0);
         op("|=", 0);
-        op(":=", 0);
 
         Term infix(int prec)
         {
@@ -837,12 +835,6 @@ static class Parser
                     case "|=":
                         a = new Term(loc, Tag.BitOrAssign, a, b);
                         break;
-                    case ":=":
-                        if (a.tag != Tag.Ref)
-                            Etc.err(a.loc, "expected identifier");
-                        a = new Term(loc, Tag.Var, a.name);
-                        a.Add(b);
-                        break;
 
                     // compiler bug
                     default:
@@ -853,7 +845,18 @@ static class Parser
 
         Term expr()
         {
-            return infix(0);
+            var a = infix(0);
+            if (eat(":"))
+            {
+                if (a.tag != Tag.Ref)
+                    Etc.err(a.loc, "expected variable name");
+                a.tag = Tag.Var;
+                if (tok != "=")
+                    a.type_ = type();
+                if (eat("="))
+                    a.Add(expr());
+            }
+            return a;
         }
 
         //statements

@@ -125,3 +125,7 @@ assert 999<1000&&1000<1001
 
 //cast
 assert 1.1!int==1
+
+//variables
+i: =5
+assert i==5
