@@ -159,10 +159,29 @@ static class Norm
         }
 
         //flatten terms
+        Term lval(Loop loop, Term a)
+        {
+            switch (a.tag)
+            {
+                case Tag.Ref:
+                    return a.ref_;
+            }
+            throw new Exception(a.ToString());
+        }
+
         Term term(Loop loop, Term a)
         {
             switch (a.tag)
             {
+                case Tag.Assign:
+                    {
+                        var x = lval(loop, a[0]);
+                        var y = term(loop, a[1]);
+                        a[0] = x;
+                        a[1] = y;
+                        block.Add(a);
+                        return y;
+                    }
                 case Tag.Ref:
                     return a.ref_;
                 case Tag.Var:

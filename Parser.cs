@@ -806,34 +806,34 @@ static class Parser
                         a = new Term(loc, Tag.Assign, a, b);
                         break;
                     case "*=":
-                        a = new Term(loc, Tag.MulAssign, a, b);
+                        a = new Term(loc, Tag.OpAssign, new Term(loc, Tag.Mul, a, b));
                         break;
                     case "/=":
-                        a = new Term(loc, Tag.DivAssign, a, b);
+                        a = new Term(loc, Tag.OpAssign, new Term(loc, Tag.Div, a, b));
                         break;
                     case "%=":
-                        a = new Term(loc, Tag.RemAssign, a, b);
+                        a = new Term(loc, Tag.OpAssign, new Term(loc, Tag.Rem, a, b));
                         break;
                     case "+=":
-                        a = new Term(loc, Tag.AddAssign, a, b);
+                        a = new Term(loc, Tag.OpAssign, new Term(loc, Tag.Add, a, b));
                         break;
                     case "-=":
-                        a = new Term(loc, Tag.SubAssign, a, b);
+                        a = new Term(loc, Tag.OpAssign, new Term(loc, Tag.Sub, a, b));
                         break;
                     case "<<=":
-                        a = new Term(loc, Tag.ShlAssign, a, b);
+                        a = new Term(loc, Tag.OpAssign, new Term(loc, Tag.Shl, a, b));
                         break;
                     case ">>=":
-                        a = new Term(loc, Tag.ShrAssign, a, b);
+                        a = new Term(loc, Tag.OpAssign, new Term(loc, Tag.Shr, a, b));
                         break;
                     case "&=":
-                        a = new Term(loc, Tag.BitAndAssign, a, b);
+                        a = new Term(loc, Tag.OpAssign, new Term(loc, Tag.BitAnd, a, b));
                         break;
                     case "^=":
-                        a = new Term(loc, Tag.BitXorAssign, a, b);
+                        a = new Term(loc, Tag.OpAssign, new Term(loc, Tag.BitXor, a, b));
                         break;
                     case "|=":
-                        a = new Term(loc, Tag.BitOrAssign, a, b);
+                        a = new Term(loc, Tag.OpAssign, new Term(loc, Tag.BitOr, a, b));
                         break;
 
                     // compiler bug
