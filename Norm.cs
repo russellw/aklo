@@ -38,12 +38,13 @@ static class Norm
             resolve(m, b);
     }
 
-    //promote types where needed
+    //infer types of expressions and local variables
     static List<Tag> numTypes = new List<Tag> { Tag.Bool, Tag.Int, Tag.Float, Tag.Double };
 
     static int rank(Term a)
     {
-        return numTypes.IndexOf(Term.type(a).tag);
+        var t = Term.type(a);
+        return numTypes.IndexOf(t.tag);
     }
 
     static Term common(Term t, Term u)
@@ -66,12 +67,17 @@ static class Norm
         return a;
     }
 
-    static void promote(Term a)
+    static void infer(Term a)
     {
         foreach (var b in a)
-            promote(b);
+            infer(b);
         switch (a.tag)
         {
+            case Tag.Var:
+                if (a.type_ == null)
+                    a.type_ = Term.type(a[0]);
+                a[0] = cast(a[0], a.type_);
+                break;
             case Tag.Eq:
                 {
                     var t = common(a[0], a[1]);
@@ -157,6 +163,17 @@ static class Norm
         {
             switch (a.tag)
             {
+                case Tag.Ref:
+                    return a.ref_;
+                case Tag.Var:
+                    if (a.Count > 0)
+                    {
+                        var x = term(loop, a[0]);
+                        a.Clear();
+                        block.Add(new Term(a.loc, Tag.Assign, a, x));
+                    }
+                    f.locals.Add(a);
+                    break;
                 case Tag.Goto:
                     block.Add(a);
                     go(new Term(a.loc, Tag.Block));
@@ -304,7 +321,7 @@ static class Norm
 
         //convert to normal form
         resolve(new Dictionary<string, Term>(), f);
-        promote(f);
+        infer(f);
         flatten(f);
         return f;
     }
