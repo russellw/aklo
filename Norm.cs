@@ -164,9 +164,10 @@ static class Norm
             switch (a.tag)
             {
                 case Tag.Ref:
-                    return a.ref_;
+                    return term(loop, a);
             }
-            throw new Exception(a.ToString());
+            Etc.err(a.loc, "expected lvalue");
+            return null;
         }
 
         Term term(Loop loop, Term a)
@@ -177,9 +178,17 @@ static class Norm
                     {
                         var x = lval(loop, a[0]);
                         var y = term(loop, a[1]);
-                        a[0] = x;
-                        a[1] = y;
-                        block.Add(a);
+                        block.Add(new Term(a.loc, Tag.Assign, x, y));
+                        return y;
+                    }
+                case Tag.OpAssign:
+                    {
+                        a = a[0];
+                        var x = lval(loop, a[0]);
+                        var y = term(loop, a[1]);
+                        y = new Term(a.loc, a.tag, x, y);
+                        block.Add(y);
+                        block.Add(new Term(a.loc, Tag.Assign, x, y));
                         return y;
                     }
                 case Tag.Ref:
