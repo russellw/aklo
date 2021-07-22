@@ -188,6 +188,11 @@ class Term : IList<Term>
             case Tag.Le:
                 return new Term(a.loc, Tag.Bool);
             case Tag.Neg:
+            case Tag.Add:
+            case Tag.Sub:
+            case Tag.Mul:
+            case Tag.Div:
+            case Tag.Rem:
                 return type(a[0]);
         }
         throw new Exception(a.ToString());

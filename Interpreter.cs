@@ -58,6 +58,28 @@ static class Interpreter
     {
         switch (a.tag)
         {
+            case Tag.Cast:
+                {
+                    dynamic x = eval(env, a[0]);
+                    switch (a.type_.tag)
+                    {
+                        case Tag.Int:
+                            if (x is bool)
+                                return x ? 1 : 0;
+                            return (int)x;
+                        case Tag.Float:
+                            if (x is bool)
+                                return x ? 1.0f : 0.0f;
+                            return (float)x;
+                        case Tag.Double:
+                            if (x is bool)
+                                return x ? 1.0 : 0.0;
+                            return (double)x;
+                        case Tag.Bool:
+                            return x != 0;
+                    }
+                    throw new Exception(a.type_.ToString());
+                }
             case Tag.Var:
                 return get(env, a);
             case Tag.Int:
@@ -75,11 +97,46 @@ static class Interpreter
                     dynamic x = eval(env, a[0]);
                     return -x;
                 }
+            case Tag.BitNot:
+                {
+                    var x = (int)eval(env, a[0]);
+                    return ~x;
+                }
             case Tag.Eq:
                 {
                     dynamic x = eval(env, a[0]);
                     dynamic y = eval(env, a[1]);
                     return x == y;
+                }
+            case Tag.BitAnd:
+                {
+                    var x = (int)eval(env, a[0]);
+                    var y = (int)eval(env, a[1]);
+                    return x & y;
+                }
+            case Tag.BitOr:
+                {
+                    var x = (int)eval(env, a[0]);
+                    var y = (int)eval(env, a[1]);
+                    return x | y;
+                }
+            case Tag.BitXor:
+                {
+                    var x = (int)eval(env, a[0]);
+                    var y = (int)eval(env, a[1]);
+                    return x ^ y;
+                }
+            case Tag.Shl:
+                {
+                    var x = (int)eval(env, a[0]);
+                    var y = (int)eval(env, a[1]);
+                    return x << y;
+                }
+            case Tag.Shr:
+                {
+                    var x = (int)eval(env, a[0]);
+                    var y = (int)eval(env, a[1]);
+                    return x >> y;
                 }
             case Tag.Lt:
                 {
@@ -92,6 +149,36 @@ static class Interpreter
                     dynamic x = eval(env, a[0]);
                     dynamic y = eval(env, a[1]);
                     return x <= y;
+                }
+            case Tag.Add:
+                {
+                    dynamic x = eval(env, a[0]);
+                    dynamic y = eval(env, a[1]);
+                    return x + y;
+                }
+            case Tag.Sub:
+                {
+                    dynamic x = eval(env, a[0]);
+                    dynamic y = eval(env, a[1]);
+                    return x - y;
+                }
+            case Tag.Mul:
+                {
+                    dynamic x = eval(env, a[0]);
+                    dynamic y = eval(env, a[1]);
+                    return x * y;
+                }
+            case Tag.Div:
+                {
+                    dynamic x = eval(env, a[0]);
+                    dynamic y = eval(env, a[1]);
+                    return x / y;
+                }
+            case Tag.Rem:
+                {
+                    dynamic x = eval(env, a[0]);
+                    dynamic y = eval(env, a[1]);
+                    return x % y;
                 }
         }
         throw new Exception(a.ToString());

@@ -41,12 +41,12 @@ static class Norm
     //promote types where needed
     static List<Tag> numTypes = new List<Tag> { Tag.Bool, Tag.Int, Tag.Float, Tag.Double };
 
-    static int rank(Term t)
+    static int rank(Term a)
     {
-        return numTypes.IndexOf(t.tag);
+        return numTypes.IndexOf(Term.type(a).tag);
     }
 
-    static Term common(Term t,Term u)
+    static Term common(Term t, Term u)
     {
         var ti = rank(t);
         if (ti < 0)
@@ -57,7 +57,7 @@ static class Norm
         return new Term(t.loc, numTypes[Math.Max(ti, ui)]);
     }
 
-    static Term cast(Term a,Term t)
+    static Term cast(Term a, Term t)
     {
         if (Term.eq(Term.type(a), t))
             return a;
@@ -72,18 +72,43 @@ static class Norm
             promote(b);
         switch (a.tag)
         {
-            case Tag.Lt:
+            case Tag.Eq:
                 {
                     var t = common(a[0], a[1]);
                     if (t == null)
                         break;
+                    for (var i = 0; i < a.Count; i++)
+                        a[i] = cast(a[i], t);
+                    break;
+                }
+            case Tag.Lt:
+            case Tag.Le:
+            case Tag.Add:
+            case Tag.Sub:
+            case Tag.Mul:
+            case Tag.Div:
+            case Tag.Rem:
+                {
+                    var t = common(a[0], a[1]);
+                    if (t == null)
+                        Etc.err(a.loc, "expected numbers");
                     if (t.tag == Tag.Bool)
                         t = new Term(t.loc, Tag.Int);
                     for (var i = 0; i < a.Count; i++)
                         a[i] = cast(a[i], t);
                     break;
                 }
+            case Tag.BitAnd:
+            case Tag.BitXor:
+            case Tag.BitOr:
+            case Tag.BitNot:
+            case Tag.Shl:
+            case Tag.Shr:
+                for (var i = 0; i < a.Count; i++)
+                    a[i] = cast(a[i], new Term(a.loc, Tag.Int));
+                break;
             case Tag.And:
+            case Tag.Assert:
             case Tag.Or:
             case Tag.Not:
                 for (var i = 0; i < a.Count; i++)
