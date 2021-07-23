@@ -27,31 +27,44 @@ static class Interpreter
         }
     }
 
-    static object get(Env env, Term key)
+    static object get(Env env, Term a)
     {
+        switch (a.tag)
+        {
+            case Tag.Int:
+                return a.intVal;
+            case Tag.Float:
+                return a.floatVal;
+            case Tag.Double:
+                return a.doubleVal;
+            case Tag.True:
+                return true;
+            case Tag.False:
+                return false;
+        }
         while (env != null)
         {
-            if (env.m.ContainsKey(key))
+            if (env.m.ContainsKey(a))
             {
-                return env.m[key];
+                return env.m[a];
             }
             env = env.outer;
         }
-        throw new Exception(key.ToString());
+        throw new Exception(a.ToString());
     }
 
-    static void set(Env env, Term key, object val)
+    static void set(Env env, Term a, object val)
     {
         while (env != null)
         {
-            if (env.m.ContainsKey(key))
+            if (env.m.ContainsKey(a))
             {
-                env.m[key] = val;
+                env.m[a] = val;
                 return;
             }
             env = env.outer;
         }
-        throw new Exception(key.ToString());
+        throw new Exception(a.ToString());
     }
 
     static object eval(Env env, Term a)
@@ -80,18 +93,6 @@ static class Interpreter
                     }
                     throw new Exception(a.type_.ToString());
                 }
-            case Tag.Var:
-                return get(env, a);
-            case Tag.Int:
-                return a.intVal;
-            case Tag.Float:
-                return a.floatVal;
-            case Tag.Double:
-                return a.doubleVal;
-            case Tag.True:
-                return true;
-            case Tag.False:
-                return false;
             case Tag.Neg:
                 {
                     dynamic x = eval(env, a[0]);
