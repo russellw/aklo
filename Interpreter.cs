@@ -67,125 +67,7 @@ static class Interpreter
         throw new Exception(a.ToString());
     }
 
-    static object eval(Env env, Term a)
-    {
-        switch (a.tag)
-        {
-            case Tag.Cast:
-                {
-                    dynamic x = get(env, a[0]);
-                    switch (a.type_.tag)
-                    {
-                        case Tag.Int:
-                            if (x is bool)
-                                return x ? 1 : 0;
-                            return (int)x;
-                        case Tag.Float:
-                            if (x is bool)
-                                return x ? 1.0f : 0.0f;
-                            return (float)x;
-                        case Tag.Double:
-                            if (x is bool)
-                                return x ? 1.0 : 0.0;
-                            return (double)x;
-                        case Tag.Bool:
-                            return x != 0;
-                    }
-                    throw new Exception(a.type_.ToString());
-                }
-            case Tag.Neg:
-                {
-                    dynamic x = get(env, a[0]);
-                    return -x;
-                }
-            case Tag.BitNot:
-                {
-                    var x = (int)get(env, a[0]);
-                    return ~x;
-                }
-            case Tag.Eq:
-                {
-                    dynamic x = get(env, a[0]);
-                    dynamic y = get(env, a[1]);
-                    return x == y;
-                }
-            case Tag.BitAnd:
-                {
-                    var x = (int)get(env, a[0]);
-                    var y = (int)get(env, a[1]);
-                    return x & y;
-                }
-            case Tag.BitOr:
-                {
-                    var x = (int)get(env, a[0]);
-                    var y = (int)get(env, a[1]);
-                    return x | y;
-                }
-            case Tag.BitXor:
-                {
-                    var x = (int)get(env, a[0]);
-                    var y = (int)get(env, a[1]);
-                    return x ^ y;
-                }
-            case Tag.Shl:
-                {
-                    var x = (int)get(env, a[0]);
-                    var y = (int)get(env, a[1]);
-                    return x << y;
-                }
-            case Tag.Shr:
-                {
-                    var x = (int)get(env, a[0]);
-                    var y = (int)get(env, a[1]);
-                    return x >> y;
-                }
-            case Tag.Lt:
-                {
-                    dynamic x = get(env, a[0]);
-                    dynamic y = get(env, a[1]);
-                    return x < y;
-                }
-            case Tag.Le:
-                {
-                    dynamic x = get(env, a[0]);
-                    dynamic y = get(env, a[1]);
-                    return x <= y;
-                }
-            case Tag.Add:
-                {
-                    dynamic x = get(env, a[0]);
-                    dynamic y = get(env, a[1]);
-                    return x + y;
-                }
-            case Tag.Sub:
-                {
-                    dynamic x = get(env, a[0]);
-                    dynamic y = get(env, a[1]);
-                    return x - y;
-                }
-            case Tag.Mul:
-                {
-                    dynamic x = get(env, a[0]);
-                    dynamic y = get(env, a[1]);
-                    return x * y;
-                }
-            case Tag.Div:
-                {
-                    dynamic x = get(env, a[0]);
-                    dynamic y = get(env, a[1]);
-                    return x / y;
-                }
-            case Tag.Rem:
-                {
-                    dynamic x = get(env, a[0]);
-                    dynamic y = get(env, a[1]);
-                    return x % y;
-                }
-        }
-        throw new Exception(a.ToString());
-    }
-
-    static object apply(Closure closure, Term[] args)
+    static object call(Closure closure, Term[] args)
     {
         var env = new Env(closure.env);
         var f = closure.f;
@@ -236,9 +118,148 @@ static class Interpreter
                         ip = 0;
                         break;
                     }
+                case Tag.Cast:
+                    {
+                        dynamic x = get(env, a[0]);
+                        switch (a.type_.tag)
+                        {
+                            case Tag.Int:
+                                if (x is bool)
+                                {
+                                    env.m[a] = x ? 1 : 0;
+                                    break;
+                                }
+                                env.m[a] = (int)x;
+                                break;
+                            case Tag.Float:
+                                if (x is bool)
+                                {
+                                    env.m[a] = x ? 1.0f : 0.0f;
+                                    break;
+                                }
+                                env.m[a] = (float)x;
+                                break;
+                            case Tag.Double:
+                                if (x is bool)
+                                {
+                                    env.m[a] = x ? 1.0 : 0.0;
+                                    break;
+                                }
+                                env.m[a] = (double)x;
+                                break;
+                            case Tag.Bool:
+                                env.m[a] = x != 0;
+                                break;
+                            default:
+                                throw new Exception(a.type_.ToString());
+                        }
+                        break;
+                    }
+                case Tag.Neg:
+                    {
+                        dynamic x = get(env, a[0]);
+                        env.m[a] = -x;
+                        break;
+                    }
+                case Tag.BitNot:
+                    {
+                        var x = (int)get(env, a[0]);
+                        env.m[a] = ~x;
+                        break;
+                    }
+                case Tag.Eq:
+                    {
+                        dynamic x = get(env, a[0]);
+                        dynamic y = get(env, a[1]);
+                        env.m[a] = x == y;
+                        break;
+                    }
+                case Tag.BitAnd:
+                    {
+                        var x = (int)get(env, a[0]);
+                        var y = (int)get(env, a[1]);
+                        env.m[a] = x & y;
+                        break;
+                    }
+                case Tag.BitOr:
+                    {
+                        var x = (int)get(env, a[0]);
+                        var y = (int)get(env, a[1]);
+                        env.m[a] = x | y;
+                        break;
+                    }
+                case Tag.BitXor:
+                    {
+                        var x = (int)get(env, a[0]);
+                        var y = (int)get(env, a[1]);
+                        env.m[a] = x ^ y;
+                        break;
+                    }
+                case Tag.Shl:
+                    {
+                        var x = (int)get(env, a[0]);
+                        var y = (int)get(env, a[1]);
+                        env.m[a] = x << y;
+                        break;
+                    }
+                case Tag.Shr:
+                    {
+                        var x = (int)get(env, a[0]);
+                        var y = (int)get(env, a[1]);
+                        env.m[a] = x >> y;
+                        break;
+                    }
+                case Tag.Lt:
+                    {
+                        dynamic x = get(env, a[0]);
+                        dynamic y = get(env, a[1]);
+                        env.m[a] = x < y;
+                        break;
+                    }
+                case Tag.Le:
+                    {
+                        dynamic x = get(env, a[0]);
+                        dynamic y = get(env, a[1]);
+                        env.m[a] = x <= y;
+                        break;
+                    }
+                case Tag.Add:
+                    {
+                        dynamic x = get(env, a[0]);
+                        dynamic y = get(env, a[1]);
+                        env.m[a] = x + y;
+                        break;
+                    }
+                case Tag.Sub:
+                    {
+                        dynamic x = get(env, a[0]);
+                        dynamic y = get(env, a[1]);
+                        env.m[a] = x - y;
+                        break;
+                    }
+                case Tag.Mul:
+                    {
+                        dynamic x = get(env, a[0]);
+                        dynamic y = get(env, a[1]);
+                        env.m[a] = x * y;
+                        break;
+                    }
+                case Tag.Div:
+                    {
+                        dynamic x = get(env, a[0]);
+                        dynamic y = get(env, a[1]);
+                        env.m[a] = x / y;
+                        break;
+                    }
+                case Tag.Rem:
+                    {
+                        dynamic x = get(env, a[0]);
+                        dynamic y = get(env, a[1]);
+                        env.m[a] = x % y;
+                        break;
+                    }
                 default:
-                    env.m[a] = eval(env, a);
-                    break;
+                    throw new Exception(a.ToString());
             }
         }
     }
@@ -248,6 +269,6 @@ static class Interpreter
         Term.debug(f);
         var closure = new Closure(null, f);
         var args = new Term[0];
-        apply(closure, args);
+        call(closure, args);
     }
 }
