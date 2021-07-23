@@ -19,7 +19,7 @@ class Term : IList<Term>
     public Term ref_;
     public int serial = -1;
 
-    static int serials;
+    static Dictionary<string, int> serials = new Dictionary<string, int>();
 
     public int Count => contents.Count;
 
@@ -120,10 +120,15 @@ class Term : IList<Term>
         Console.WriteLine();
     }
 
+    static int nextSerial(string s)
+    {
+        if (!serials.ContainsKey(s))
+            serials.Add(s, 0);
+        return serials[s]++;
+    }
+
     public override string ToString()
     {
-        if (name != null)
-            return name;
         switch (tag)
         {
             case Tag.Int:
@@ -136,9 +141,17 @@ class Term : IList<Term>
             case Tag.True:
                 return tag.ToString();
         }
+        if (name == null)
+        {
+            if (serial < 0)
+                serial = nextSerial("");
+            return serial.ToString();
+        }
         if (serial < 0)
-            serial = serials++;
-        return string.Format("{0:x}", serial);
+            serial = nextSerial(name);
+        if (serial == 0)
+            return name;
+        return name + '/' + serial;
     }
 
     public IEnumerator<Term> GetEnumerator()
