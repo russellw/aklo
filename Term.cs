@@ -17,6 +17,9 @@ class Term : IList<Term>
     public List<Term> params_ = new List<Term>();
     public List<Term> locals = new List<Term>();
     public Term ref_;
+    public int serial = -1;
+
+    static int serials;
 
     public int Count => contents.Count;
 
@@ -77,42 +80,65 @@ class Term : IList<Term>
 
     public static void debug(Term a, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
     {
-        Console.WriteLine("{0}:{1}: {2}", file, line, a);
-        foreach (var b in a)
+        Console.WriteLine("{0}:{1}:", file, line);
+        debug1(a);
+    }
+
+    public static void debug1(Term a)
+    {
+        switch (a.tag)
         {
-            Console.Write("    ");
-            Console.WriteLine(b);
-            if (b.tag == Tag.Block)
-            {
-                foreach (var c in b)
+            case Tag.Fn:
+                Console.WriteLine(a);
+                foreach (var b in a.locals)
                 {
-                    Console.Write("        ");
-                    Console.WriteLine(c);
+                    Console.Write("  {0}:", b);
+                    if (b.type_ != null)
+                        Console.Write(" {0}", b.type_.tag);
+                    Console.WriteLine();
                 }
-            }
+                foreach (var b in a)
+                    debug1(b);
+                return;
+            case Tag.Block:
+                Console.WriteLine("  {0}", a);
+                foreach (var b in a)
+                    debug1(b);
+                return;
+            case Tag.Assert:
+            case Tag.Return:
+            case Tag.Assign:
+            case Tag.Debug:
+                Console.Write("    {0}", a.tag);
+                break;
+            default:
+                Console.Write("    {0} = {1}", a, a.tag);
+                break;
         }
+        foreach (var b in a)
+            Console.Write(" {0}", b);
+        Console.WriteLine();
     }
 
     public override string ToString()
     {
-        var sb = new StringBuilder();
-        sb.Append(tag);
-        sb.Append(' ');
+        if (name != null)
+            return name;
         switch (tag)
         {
             case Tag.Int:
-                sb.Append(intVal);
-                break;
+                return "#" + intVal;
             case Tag.Float:
-                sb.Append(floatVal);
-                break;
+                return "#" + floatVal;
             case Tag.Double:
-                sb.Append(doubleVal);
-                break;
+                return "#" + doubleVal;
+            case Tag.False:
+            case Tag.True:
+                return tag.ToString();
         }
-        if (name != null)
-            sb.Append(name);
-        return sb.ToString();
+        if (serial < 0)
+            serial = serials++;
+        return string.Format("{0:x}", serial);
     }
 
     public IEnumerator<Term> GetEnumerator()
