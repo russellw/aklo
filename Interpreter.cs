@@ -73,7 +73,7 @@ static class Interpreter
         {
             case Tag.Cast:
                 {
-                    dynamic x = eval(env, a[0]);
+                    dynamic x = get(env, a[0]);
                     switch (a.type_.tag)
                     {
                         case Tag.Int:
@@ -95,90 +95,90 @@ static class Interpreter
                 }
             case Tag.Neg:
                 {
-                    dynamic x = eval(env, a[0]);
+                    dynamic x = get(env, a[0]);
                     return -x;
                 }
             case Tag.BitNot:
                 {
-                    var x = (int)eval(env, a[0]);
+                    var x = (int)get(env, a[0]);
                     return ~x;
                 }
             case Tag.Eq:
                 {
-                    dynamic x = eval(env, a[0]);
-                    dynamic y = eval(env, a[1]);
+                    dynamic x = get(env, a[0]);
+                    dynamic y = get(env, a[1]);
                     return x == y;
                 }
             case Tag.BitAnd:
                 {
-                    var x = (int)eval(env, a[0]);
-                    var y = (int)eval(env, a[1]);
+                    var x = (int)get(env, a[0]);
+                    var y = (int)get(env, a[1]);
                     return x & y;
                 }
             case Tag.BitOr:
                 {
-                    var x = (int)eval(env, a[0]);
-                    var y = (int)eval(env, a[1]);
+                    var x = (int)get(env, a[0]);
+                    var y = (int)get(env, a[1]);
                     return x | y;
                 }
             case Tag.BitXor:
                 {
-                    var x = (int)eval(env, a[0]);
-                    var y = (int)eval(env, a[1]);
+                    var x = (int)get(env, a[0]);
+                    var y = (int)get(env, a[1]);
                     return x ^ y;
                 }
             case Tag.Shl:
                 {
-                    var x = (int)eval(env, a[0]);
-                    var y = (int)eval(env, a[1]);
+                    var x = (int)get(env, a[0]);
+                    var y = (int)get(env, a[1]);
                     return x << y;
                 }
             case Tag.Shr:
                 {
-                    var x = (int)eval(env, a[0]);
-                    var y = (int)eval(env, a[1]);
+                    var x = (int)get(env, a[0]);
+                    var y = (int)get(env, a[1]);
                     return x >> y;
                 }
             case Tag.Lt:
                 {
-                    dynamic x = eval(env, a[0]);
-                    dynamic y = eval(env, a[1]);
+                    dynamic x = get(env, a[0]);
+                    dynamic y = get(env, a[1]);
                     return x < y;
                 }
             case Tag.Le:
                 {
-                    dynamic x = eval(env, a[0]);
-                    dynamic y = eval(env, a[1]);
+                    dynamic x = get(env, a[0]);
+                    dynamic y = get(env, a[1]);
                     return x <= y;
                 }
             case Tag.Add:
                 {
-                    dynamic x = eval(env, a[0]);
-                    dynamic y = eval(env, a[1]);
+                    dynamic x = get(env, a[0]);
+                    dynamic y = get(env, a[1]);
                     return x + y;
                 }
             case Tag.Sub:
                 {
-                    dynamic x = eval(env, a[0]);
-                    dynamic y = eval(env, a[1]);
+                    dynamic x = get(env, a[0]);
+                    dynamic y = get(env, a[1]);
                     return x - y;
                 }
             case Tag.Mul:
                 {
-                    dynamic x = eval(env, a[0]);
-                    dynamic y = eval(env, a[1]);
+                    dynamic x = get(env, a[0]);
+                    dynamic y = get(env, a[1]);
                     return x * y;
                 }
             case Tag.Div:
                 {
-                    dynamic x = eval(env, a[0]);
-                    dynamic y = eval(env, a[1]);
+                    dynamic x = get(env, a[0]);
+                    dynamic y = get(env, a[1]);
                     return x / y;
                 }
             case Tag.Rem:
                 {
-                    dynamic x = eval(env, a[0]);
-                    dynamic y = eval(env, a[1]);
+                    dynamic x = get(env, a[0]);
+                    dynamic y = get(env, a[1]);
                     return x % y;
                 }
         }
@@ -207,31 +207,31 @@ static class Interpreter
                     ip = 0;
                     break;
                 case Tag.Return:
-                    return eval(env, a[0]);
+                    return get(env, a[0]);
                 case Tag.Assign:
                     {
                         var x = a[0];
-                        var y = eval(env, a[1]);
+                        var y = get(env, a[1]);
                         set(env, x, y);
                         env.m[a] = y;
                         break;
                     }
                 case Tag.Assert:
                     {
-                        var x = (bool)eval(env, a[0]);
+                        var x = (bool)get(env, a[0]);
                         if (!x)
                             Etc.err(a.loc, "assert failed");
                         break;
                     }
                 case Tag.Debug:
                     {
-                        var x = eval(env, a[0]);
+                        var x = get(env, a[0]);
                         Console.WriteLine("{0}:{1}: {2}", a.loc.file, a.loc.line, x);
                         break;
                     }
                 case Tag.If:
                     {
-                        var cond = (bool)eval(env, a[0]);
+                        var cond = (bool)get(env, a[0]);
                         block = a[cond ? 1 : 2];
                         ip = 0;
                         break;
